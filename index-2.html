@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RST 공손표지 분석기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --bg2: #eeeae0;
+  --surface: #fffef9;
+  --border: #d8d3c8;
+  --border2: #c5bfb0;
+  --text: #1a1714;
+  --text2: #5a554e;
+  --text3: #8a847a;
+  --accent: #3d4f2e;
+  --accent2: #5a7040;
+  --accent-light: #dde8d0;
+  --nucleus: #2c3e50;
+  --nucleus-bg: #e8ecf0;
+  --satellite-bg: #f0ece4;
+  --pol: #6b3a2a;
+  --pol-bg: #f5ece8;
+  --move: #2a3d6b;
+  --move-bg: #e8edf5;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+header h1 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.3px;
+}
+
+header p {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* API 키 배너 */
+.api-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.api-banner label {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.api-banner input {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.api-banner input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.api-note {
+  font-size: 11px;
+  color: var(--text3);
+  width: 100%;
+}
+
+/* 입력 영역 */
+.input-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-card label {
+  display: block;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  resize: vertical;
+}
+
+textarea:focus { outline: none; border-color: var(--accent2); }
+
+.input-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 7px 16px;
+  font-size: 13px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+}
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { background: var(--bg2); }
+
+.status {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+
+.tab {
+  padding: 8px 18px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text3);
+  cursor: pointer;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* 통계 */
+.stats-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  flex: 1;
+  min-width: 80px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+.stat-n { font-size: 24px; font-weight: 500; color: var(--accent); font-family: 'Noto Serif KR', serif; }
+.stat-l { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* EDU 카드 */
+.edu-list { display: flex; flex-direction: column; gap: 10px; }
+
+.edu-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+}
+
+.edu-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.edu-num {
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+.tag-nucleus { background: var(--nucleus-bg); color: var(--nucleus); border-color: #b0bcc8; }
+.tag-satellite { background: var(--satellite-bg); color: #5a4a2a; border-color: #c8bca8; }
+.tag-pol { background: var(--pol-bg); color: var(--pol); border-color: #d8b8b0; }
+.tag-move { background: var(--move-bg); color: var(--move); border-color: #b0bcd8; }
+
+.edu-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.edu-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+
+.rel-edit {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.rel-edit span { font-size: 11px; color: var(--text3); }
+
+select {
+  padding: 3px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+}
+select:focus { outline: none; border-color: var(--accent); }
+
+/* 트리 */
+.tree-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  min-height: 160px;
+}
+
+.tree-node { margin-left: 24px; margin-top: 4px; }
+.tree-root { margin-left: 0; }
+
+.tree-edu-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 3px 0;
+}
+
+.tree-rel {
+  font-size: 11px;
+  color: var(--accent2);
+  margin-left: 24px;
+  padding: 1px 0;
+  font-style: italic;
+}
+
+/* 공손표지 */
+.pol-type-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.pol-list { display: flex; flex-direction: column; }
+.pol-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.pol-item:last-child { border-bottom: none; }
+.pol-edu-badge {
+  font-size: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pol-marker { font-weight: 500; color: var(--pol); margin-bottom: 2px; }
+.pol-type { font-size: 11px; color: var(--accent2); margin-bottom: 2px; }
+.pol-function { font-size: 12px; color: var(--text3); }
+
+/* 빈 상태 */
+.empty {
+  text-align: center;
+  color: var(--text3);
+  padding: 3rem 1rem;
+  font-size: 13px;
+  line-height: 2;
+}
+
+/* 로딩 */
+.loading { text-align: center; color: var(--text3); padding: 3rem 1rem; font-size: 13px; }
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+footer {
+  text-align: center;
+  padding: 2rem;
+  font-size: 11px;
+  color: var(--text3);
+  border-top: 1px solid var(--border);
+  margin-top: 3rem;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RST 공손표지 분석기</h1>
+  <p>한국어 북리뷰 · 수사구조이론 기반</p>
+</header>
+
+<div class="container">
+
+  <div class="api-banner">
+    <label for="apiKey">Anthropic API 키</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    <span class="api-note">키는 이 페이지 내에서만 사용되며 어디에도 전송·저장되지 않습니다.</span>
+  </div>
+
+  <div class="input-card">
+    <label for="inputText">분석할 한국어 북리뷰 텍스트</label>
+    <textarea id="inputText" rows="6" placeholder="예) 처음엔 기대를 안 했는데, 읽다 보니 생각보다 꽤 괜찮더라고요. 문체가 좀 어렵긴 하지만, 전반적으로는 추천할 만한 것 같아요."></textarea>
+    <div class="input-actions">
+      <button class="btn-primary" id="analyzeBtn" onclick="analyze()">분석 시작</button>
+      <button class="btn-ghost" onclick="loadExample()">예시 텍스트</button>
+      <span class="status" id="statusMsg"></span>
+    </div>
+  </div>
+
+  <div id="resultArea" style="display:none;">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('edu', this)">EDU 분석</button>
+      <button class="tab" onclick="switchTab('tree', this)">RST 트리</button>
+      <button class="tab" onclick="switchTab('pol', this)">공손표지</button>
+    </div>
+
+    <div id="tab-edu" class="tab-content">
+      <div id="statsRow" class="stats-row"></div>
+      <div id="eduList" class="edu-list"></div>
+    </div>
+
+    <div id="tab-tree" class="tab-content" style="display:none;">
+      <div id="treeArea" class="tree-area"></div>
+    </div>
+
+    <div id="tab-pol" class="tab-content" style="display:none;">
+      <div id="polArea"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  RST 공손표지 분석기 · 한국어 북리뷰 담화 분석 도구<br>
+  Powered by Claude (Anthropic) · GitHub Pages
+</footer>
+
+<script>
+const RST_RELATIONS = ['Elaboration','Contrast','Concession','Background','Evaluation','Evidence','Cause','Condition','Sequence','Restatement'];
+const MOVE_LABELS = ['도입','줄거리 요약','평가','추천/비추천','근거 제시','맺음말'];
+const POL_TYPES = ['헤지(hedge)','경어적 표현','완화어','부정적 완화','불확실성 표지','반어적 표현'];
+
+let analysisData = null;
+
+function loadExample() {
+  document.getElementById('inputText').value =
+    '처음엔 솔직히 기대를 안 했는데, 읽다 보니 생각보다 꽤 괜찮더라고요. 문체가 좀 어렵긴 하지만, 그래도 전반적으로는 추천할 만한 것 같아요. 특히 주인공의 심리 묘사가 인상적이었는데, 다만 후반부 전개가 좀 아쉽기는 했어요.';
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  el.classList.add('active');
+  document.getElementById('tab-' + name).style.display = 'block';
+}
+
+async function analyze() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const text = document.getElementById('inputText').value.trim();
+
+  if (!apiKey) { setStatus('API 키를 입력해주세요.'); return; }
+  if (!text) { setStatus('텍스트를 입력해주세요.'); return; }
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  setStatus('<span class="spinner"></span>분석 중...');
+  document.getElementById('resultArea').style.display = 'none';
+
+  const prompt = `다음 한국어 북리뷰 텍스트를 RST(수사구조이론) 기반으로 분석해줘.
+
+텍스트: "${text}"
+
+다음 JSON 형식으로만 응답해. 추가 설명 없이 JSON만:
+{
+  "edus": [
+    {
+      "id": 1,
+      "text": "EDU 텍스트",
+      "role": "nucleus 또는 satellite",
+      "move": "Move 레이블 (${MOVE_LABELS.join('/')} 중 하나)",
+      "politeness_markers": ["헤지 표현1"]
+    }
+  ],
+  "relations": [
+    {
+      "nucleus": 1,
+      "satellite": 2,
+      "relation": "RST 관계 (${RST_RELATIONS.join('/')} 중 하나)",
+      "description": "한 줄 설명"
+    }
+  ],
+  "politeness_summary": [
+    {
+      "marker": "표지 텍스트",
+      "type": "유형 (${POL_TYPES.join('/')} 중 하나)",
+      "edu_id": 1,
+      "function": "담화 기능 설명"
+    }
+  ]
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    analysisData = JSON.parse(clean);
+
+    renderEDU();
+    renderTree();
+    renderPoliteness();
+    document.getElementById('resultArea').style.display = 'block';
+    setStatus('분석 완료 ✓');
+  } catch (e) {
+    setStatus('오류: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('statusMsg').innerHTML = msg;
+}
+
+function renderEDU() {
+  const { edus, relations } = analysisData;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="stat-n">${edus.length}</div><div class="stat-l">EDU 수</div></div>
+    <div class="stat"><div class="stat-n">${relations.length}</div><div class="stat-l">수사 관계</div></div>
+    <div class="stat"><div class="stat-n">${edus.filter(e=>e.role==='nucleus').length}</div><div class="stat-l">Nucleus</div></div>
+    <div class="stat"><div class="stat-n">${[...new Set(edus.map(e=>e.move))].length}</div><div class="stat-l">Move 유형</div></div>
+  `;
+
+  document.getElementById('eduList').innerHTML = edus.map(edu => {
+    const myRels = relations.filter(r => r.nucleus === edu.id || r.satellite === edu.id);
+    return `
+    <div class="edu-card">
+      <div class="edu-header">
+        <span class="edu-num">EDU ${edu.id}</span>
+        <span class="tag ${edu.role==='nucleus'?'tag-nucleus':'tag-satellite'}">${edu.role}</span>
+        <span class="tag tag-move">${edu.move}</span>
+      </div>
+      <div class="edu-text">${edu.text}</div>
+      <div class="edu-meta">
+        ${(edu.politeness_markers||[]).map(m=>`<span class="tag tag-pol">${m}</span>`).join('')}
+      </div>
+      ${myRels.length ? `
+      <div class="rel-edit">
+        <span>관계 수정:</span>
+        ${myRels.map(r => `
+          <select onchange="updateRelation(${r.nucleus},${r.satellite},this.value)">
+            ${RST_RELATIONS.map(rel=>`<option${rel===r.relation?' selected':''}>${rel}</option>`).join('')}
+          </select>
+          <span style="font-size:11px;color:var(--text3);">N${r.nucleus}→S${r.satellite}</span>
+        `).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function updateRelation(nuc, sat, newRel) {
+  if (!analysisData) return;
+  const rel = analysisData.relations.find(r => r.nucleus===nuc && r.satellite===sat);
+  if (rel) { rel.relation = newRel; renderTree(); }
+}
+
+function renderTree() {
+  const { edus, relations } = analysisData;
+  const relMap = {};
+  relations.forEach(r => {
+    if (!relMap[r.nucleus]) relMap[r.nucleus] = [];
+    relMap[r.nucleus].push(r);
+  });
+
+  function node(id, depth) {
+    const edu = edus.find(e=>e.id===id);
+    if (!edu) return '';
+    const preview = edu.text.length > 35 ? edu.text.slice(0,35)+'…' : edu.text;
+    let html = `<div class="${depth===0?'tree-root':'tree-node'}">
+      <div class="tree-edu-label">
+        <span class="tag ${edu.role==='nucleus'?'tag-nucleus':'tag-satellite'}">EDU ${edu.id}</span>
+        <span style="font-size:12px;color:var(--text2);">${preview}</span>
+      </div>`;
+    if (relMap[id]) {
+      relMap[id].forEach(r => {
+        html += `<div class="tree-rel">↳ ${r.relation}</div>`;
+        html += node(r.satellite, depth+1);
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+
+  const satIds = new Set(relations.map(r=>r.satellite));
+  const roots = edus.filter(e=>!satIds.has(e.id));
+  document.getElementById('treeArea').innerHTML = roots.map(r=>node(r.id,0)).join('') || '<div class="empty">트리를 구성할 수 없습니다.</div>';
+}
+
+function renderPoliteness() {
+  const { politeness_summary } = analysisData;
+  if (!politeness_summary || !politeness_summary.length) {
+    document.getElementById('polArea').innerHTML = '<div class="empty">감지된 공손표지가 없습니다.</div>';
+    return;
+  }
+
+  const byType = {};
+  politeness_summary.forEach(p => {
+    if (!byType[p.type]) byType[p.type] = 0;
+    byType[p.type]++;
+  });
+
+  let html = '<div class="pol-type-badges">';
+  Object.entries(byType).forEach(([type, cnt]) => {
+    html += `<span class="tag tag-pol">${type} <strong>${cnt}</strong></span>`;
+  });
+  html += '</div><div class="pol-list">';
+
+  politeness_summary.forEach(p => {
+    html += `<div class="pol-item">
+      <span class="pol-edu-badge">EDU ${p.edu_id}</span>
+      <div>
+        <div class="pol-marker">"${p.marker}"</div>
+        <div class="pol-type">${p.type}</div>
+        <div class="pol-function">${p.function}</div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('polArea').innerHTML = html;
+}
+</script>
+</body>
+</html>
